@@ -48,8 +48,8 @@ We use the [Oxford-IIIT Pet Dataset](https://www.robots.ox.ac.uk/~vgg/data/pets/
 
 ### 🧾 Download links
 
-- [images.tar.gz](https://www.robots.ox.ac.uk/~vgg/data/pets/images.tar.gz)
-- [annotations.tar.gz](https://www.robots.ox.ac.uk/~vgg/data/pets/annotations.tar.gz)
+- [images.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/images.tar.gz)
+- [annotations.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/annotations.tar.gz)
 
 ### 📂 After extracting, the structure should be:
 

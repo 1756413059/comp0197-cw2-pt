@@ -5,7 +5,9 @@ data/*.tar.gz
 
 # Ignore outputs from training, but keep the folder structure
 outputs/**
-!outputs/.gitkeep
+!outputs/**/.gitkeep
+
+
 
 
 

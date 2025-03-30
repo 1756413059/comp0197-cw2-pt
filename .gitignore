@@ -3,10 +3,10 @@ data/images/
 data/annotations/
 data/*.tar.gz
 
-# Ignore outputs from training
-outputs/
-*.pth
-*.pt
+# Ignore outputs from training, but keep the folder structure
+outputs/*
+!outputs/.gitkeep
+
 
 # Ignore Python cache and system files
 __pycache__/

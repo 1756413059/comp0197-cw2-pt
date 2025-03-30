@@ -4,8 +4,9 @@ data/annotations/
 data/*.tar.gz
 
 # Ignore outputs from training, but keep the folder structure
-outputs/*
+outputs/**
 !outputs/.gitkeep
+
 
 
 # Ignore Python cache and system files

@@ -1,4 +1,7 @@
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -7,13 +10,16 @@ from torchvision import models, transforms
 from utils.dataset import PetClassificationDataset
 from utils.model import get_resnet18
 
+from scripts.config import IMAGE_DIR, LIST_FILE, CHECKPOINT_DIR
+
+
 
 def train_classifier(data_root, list_file, save_path,
                      num_classes=37, batch_size=32, epochs=10, lr=1e-4):
-    # 设置设备：使用GPU（如果有）否则使用CPU
+    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # 图像预处理：Resize → ToTensor → Normalize（ImageNet 标准）
+    # image processing: Resize → ToTensor → Normalize（ImageNet standard）
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -21,18 +27,18 @@ def train_classifier(data_root, list_file, save_path,
                              [0.229, 0.224, 0.225])
     ])
 
-    # 加载训练数据集
+    # load training dataset
     dataset = PetClassificationDataset(data_root, list_file, transform)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-    # 加载模型（ResNet18）并修改输出层
+    # load model (ResNet18) and modify output layer
     model = get_resnet18(num_classes=num_classes).to(device)
     
-    # 定义损失函数和优化器
+    # loss function and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # 训练模型
+    # train model
     model.train()
     for epoch in range(epochs):
         running_loss = 0.0
@@ -57,17 +63,21 @@ def train_classifier(data_root, list_file, save_path,
         epoch_acc = correct / total * 100
         print(f"Epoch [{epoch+1}/{epochs}]  Loss: {epoch_loss:.4f}  Acc: {epoch_acc:.2f}%")
 
-    # 保存模型权重
+    # save model weights
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     torch.save(model.state_dict(), save_path)
     print(f"Model saved to {save_path}")
 
 
+import os
+
 if __name__ == '__main__':
+    save_path = os.path.join(CHECKPOINT_DIR, 'resnet18_cls.pth')
+
     train_classifier(
-        data_root='data/images',
-        list_file='data/annotations/list.txt',
-        save_path='outputs/checkpoints/resnet18_cls.pth',
+        data_root=IMAGE_DIR,
+        list_file=LIST_FILE,
+        save_path=save_path,
         num_classes=37,
         batch_size=32,
         epochs=10,

@@ -36,22 +36,6 @@ resnet_cam_unet/
 
 ---
 
-## 📦 Dataset Instructions
-
-Download the Oxford-IIIT Pet Dataset manually:
-
-- [images.tar.gz](https://www.robots.ox.ac.uk/~vgg/data/pets/images.tar.gz)
-- [annotations.tar.gz](https://www.robots.ox.ac.uk/~vgg/data/pets/annotations.tar.gz)
-
-Extract to `data/` directory:
-
-```bash
-tar -xvzf images.tar.gz -C data/
-tar -xvzf annotations.tar.gz -C data/
-```
-
----
-
 ## 🚀 Pipeline Summary
 
 ```bash

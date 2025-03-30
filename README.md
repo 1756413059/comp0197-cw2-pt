@@ -63,6 +63,21 @@ comp0197-cw2-pt/
 
 ---
 
+## 📦 Dataset Instructions
+
+Download the Oxford-IIIT Pet Dataset manually:
+
+- [images.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/images.tar.gzz)
+- [annotations.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/annotations.tar.gz)
+
+Extract to `data/` directory:
+
+```bash
+tar -xvzf images.tar.gz -C data/
+tar -xvzf annotations.tar.gz -C data/
+```
+---
+
 ## ✍️ Author
 
 UCL COMP0197 Coursework2 Group 8

@@ -4,7 +4,7 @@ data/annotations/
 data/*.tar.gz
 
 # Ignore outputs from training, but keep the folder structure
-outputs/**/*
+outputs/*/*
 !outputs/**/.gitkeep
 
 

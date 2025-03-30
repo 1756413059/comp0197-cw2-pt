@@ -72,7 +72,7 @@ def train_classifier(data_root, list_file, save_path,
 import os
 
 if __name__ == '__main__':
-    save_path = os.path.join(CHECKPOINT_DIR, 'resnet18_cls.pth')
+    save_path = os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch_5.pth')
 
     train_classifier(
         data_root=IMAGE_DIR,
@@ -80,6 +80,6 @@ if __name__ == '__main__':
         save_path=save_path,
         num_classes=37,
         batch_size=32,
-        epochs=10,
+        epochs=5,
         lr=1e-4
     )

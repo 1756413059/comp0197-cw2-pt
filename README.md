@@ -11,18 +11,39 @@ It contains multiple sub-projects related to different components of the course.
 
 ```
 comp0197-cw2-pt/
-├── MRP/              # Main Research Project (CAM → UNet for Pet Segmentation)
-│   └── resnet-cam-unet/
-│       ├── data/
-│       ├── outputs/
+├── data/                            # ⬅️ Shared dataset (Oxford-IIIT Pet)
+│   ├── images/
+│   └── annotations/
+│       ├── list.txt
+│       └── trimaps/
+│
+├── outputs/                         # ⬅️ All experiment outputs (grouped by experiment name)
+│   └── resnet_cam_unet/
+│       ├── checkpoints/            # Classifier + segmentor model weights
+│       ├── cams/                   # Optional CAM heatmaps
+│       ├── pseudo_masks/          # Generated masks from CAM
+│       └── preds/                 # UNet prediction masks
+│
+├── MRP/
+│   └── resnet_cam_unet/            # Main model code
 │       ├── scripts/
-│       └── README.md
+│       │   ├── train_classifier.py
+│       │   ├── train_segmentor.py
+│       │   ├── generate_pseudo_masks.py
+│       │   ├── generate_cam.py
+│       │   ├── predict_and_visualize.py
+│       │   └── utils/
+│       │       ├── config.py
+│       │       ├── model.py, dataset.py, cam_utils.py, etc.
+│       ├── README.md
+│       └── requirements.txt
 │
-├── OEQ/              # Open-Ended Question (empty or experimental)
-│   └── (placeholder)
+├── OEQ/                             # Optional open-ended work (currently placeholder)
+│   └── (empty or in progress)
 │
-└── README.md         # <- you are here
-```
+├── .gitignore                       # Ignores data/, outputs/, cache, etc.
+└── README.md                        # Top-level README (project overview)
+
 
 ---
 
@@ -44,5 +65,4 @@ comp0197-cw2-pt/
 
 ## ✍️ Author
 
-*Your Name*  
-UCL COMP0197 Coursework Repository
+UCL COMP0197 Coursework2 Group 8

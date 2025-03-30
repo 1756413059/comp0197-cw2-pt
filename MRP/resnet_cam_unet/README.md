@@ -6,7 +6,7 @@ This project implements a weakly-supervised semantic segmentation pipeline for p
 ```
 comp0197-cw2-pt/
 └── MRP/
-    └── resnet-cam-unet/    <- this is the main project directory
+    └── resnet_cam_unet/    <- this is the main project directory
 ```
 
 We use only image-level labels (breed categories) from the Oxford-IIIT Pet dataset to create pseudo pixel-level labels using Class Activation Maps (CAM), and train a UNet segmentation model with them.
@@ -16,17 +16,7 @@ We use only image-level labels (breed categories) from the Oxford-IIIT Pet datas
 ## 📁 Project Structure
 
 ```
-resnet-cam-unet/
-├── data/
-│   ├── images/                  # Raw pet images (.jpg)
-│   └── annotations/            # list.txt + trimaps/ + xmls/
-│
-├── outputs/
-│   ├── checkpoints/            # Trained models (.pth)
-│   ├── cams/                   # Visual CAM heatmaps
-│   ├── pseudo_masks/          # CAM → binary masks
-│   └── preds/                 # UNet predictions
-│
+resnet_cam_unet/
 ├── scripts/
 │   ├── train_classifier.py        # Train ResNet18 classifier
 │   ├── generate_cam.py            # Extract CAM for one image
@@ -41,7 +31,6 @@ resnet-cam-unet/
 │       └── metrics.py (optional)
 │
 ├── README.md
-├── .gitignore
 └── requirements.txt (optional)
 ```
 

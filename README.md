@@ -67,7 +67,7 @@ comp0197-cw2-pt/
 
 Download the Oxford-IIIT Pet Dataset manually:
 
-- [images.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/images.tar.gzz)
+- [images.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/images.tar.gz)
 - [annotations.tar.gz](https://thor.robots.ox.ac.uk/~vgg/data/pets/annotations.tar.gz)
 
 Extract to `data/` directory:

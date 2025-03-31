@@ -54,7 +54,7 @@ comp0197-cw2-pt/
 - Location: `MRP/resnet-cam-unet/`
 - A complete weakly-supervised semantic segmentation pipeline using the Oxford-IIIT Pet Dataset.
 - Uses ResNet18 for classification, CAM for localization, and UNet for segmentation.
-- See the [MRP README](MRP/resnet-cam-unet/README.md) for full details.
+- See the [MRP README](MRP/resnet_cam_unet/README.md) for full details.
 
 ### 🧪 OEQ: Open-Ended Question (Optional / In Progress)
 

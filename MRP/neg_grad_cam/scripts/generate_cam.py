@@ -10,10 +10,10 @@ import matplotlib.cm as cm
 # Add project root for config import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.config import IMAGE_DIR, LIST_FILE, CHECKPOINT_DIR, CAM_DIR
+from scripts.config import IMAGE_DIR, TRAIN_FILE, CHECKPOINT_DIR, CAM_DIR
 from utils.dataset import PetClassificationDataset
-from utils.model import get_resnet18
-from utils.grad_cam_utils import generate_grad_cam
+from utils.model import get_resnet18, get_mobilenet_v3_small
+from utils.grad_cam_utils import generate_grad_cam, generate_grad_cam_mobilenet
 # from utils.cam_utils import generate_cam
 
 def denormalize_image(tensor):
@@ -51,38 +51,67 @@ transform = transforms.Compose([
 ])
 
 # === Load one image
-dataset = PetClassificationDataset(IMAGE_DIR, LIST_FILE, transform=transform, train_only=True)
+dataset = PetClassificationDataset(IMAGE_DIR, TRAIN_FILE, transform=transform)
 print("len(dataset): ", len(dataset))
-image_tensor, label, image_name = dataset[99]
-# print("label: ", label)
 
-# === Load model
-model = get_resnet18(num_classes=37)
-state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls.pth'), map_location='cpu')
-model.load_state_dict(state_dict)
+for i in range(10):
+    model_name = "mobilenet" # "resnet"
+    image_tensor, label, image_name = dataset[i*100 + 1]
+    # print("label: ", label)
+
+    # === Load model
+    if model_name == "resnet":
+        model = get_resnet18(num_classes=37)
+        state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch5.pth'), map_location='cpu')
+    elif model_name == "mobilenet":
+        model = get_mobilenet_v3_small()
+        state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'mobilenet_epoch9.pth'), map_location='cpu')
+    else:
+        raise ValueError(f"Invalid model name: {model_name}")
+    
+    
+    model.load_state_dict(state_dict)
+
+    generate_cam_fn = generate_grad_cam_mobilenet
+    # generate_cam_fn = generate_grad_cam
 
 
-# excluded_classes = [i for i in range(0,37)]
-# include_classes = [2,33,36]
-# excluded_classes = list(set(excluded_classes) - set(include_classes))
-excluded_classes = [label]
+
+    # choose chose a few false classes (included_classes) to to negative grad-CAM
+    # when included_classes is empty, algorithm reduces to normal grad-CAM
+
+    excluded_classes = [i for i in range(0,37)]
+    # included_classes = [0,2,7,16,19,37]
+    # included_classes = [0,2,7,16,20,21,37]
+    included_classes = []
+    excluded_classes = list(set(excluded_classes) - set(included_classes))
 
 
-# === Generate CAM
-grad_cam_list = [
-    generate_grad_cam(model, image_tensor, target_class=c, negative=True)
-    for c in range(0, 37) if c not in excluded_classes
-]
-grad_cam_list.append(generate_grad_cam(model, image_tensor, label, negative=False))
-grad_cam_maxed = np.maximum.reduce(grad_cam_list)
 
 
-# === Convert everything
-original_image = denormalize_image(image_tensor)
-heatmap = cam_to_heatmap(grad_cam_maxed)
-overlay = overlay_image_and_heatmap(original_image, heatmap, alpha=0.5)
+    # === Generate CAM
+    grad_cam_list = [
+        # negative grad-CAM for false classes
+        generate_cam_fn(model, image_tensor, target_class=c, negative=True)
+        for c in range(0, 37) if (c not in excluded_classes) and (c != label)
+    ]
+    # positive grad-CAM for the true labelled class 
+    grad_cam_list.append(generate_cam_fn(model, image_tensor, target_class=label, negative=False))
+    grad_cam_maxed = np.maximum.reduce(grad_cam_list)
 
-# === Save overlay
-save_path = os.path.join(CAM_DIR, f'{image_name}_negradcam_overlay.jpg')
-overlay.save(save_path)
-print(f"✅ neg-grad-CAM overlay saved to: {save_path}")
+
+    # === Convert everything
+    original_image = denormalize_image(image_tensor)
+    heatmap = cam_to_heatmap(grad_cam_maxed)
+    overlay = overlay_image_and_heatmap(original_image, heatmap, alpha=0.5)
+
+    # # === Save original image
+    # save_path = os.path.join(CAM_DIR, f'{image_name}.jpg')
+    # original_image.save(save_path)
+
+    # === Save overlay
+    save_path = os.path.join(CAM_DIR, f'{image_name}_neggradcam_overlay_mbn.jpg')
+    if not included_classes:
+        save_path = os.path.join(CAM_DIR, f'{image_name}_gradcam_overlay_mbn.jpg')
+    overlay.save(save_path)
+    print(f"✅ neg-grad-CAM overlay img saved to: {save_path}")

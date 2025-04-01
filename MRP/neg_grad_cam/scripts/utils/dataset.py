@@ -3,9 +3,25 @@ from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms.functional as TF
 
+# #Image CLASS-ID SPECIES BREED-ID
+# #ID: 1:37 Class ids
+# #SPECIES: 1:Cat 2:Dog
+# #BREED ID: 1-25:Cat 1:12:Dog
+# #All images with 1st letter as captial are cat images
+# #images with small first letter are dog images
+# Abyssinian_100 1 1 1
+# Abyssinian_101 1 1 1
+# Abyssinian_102 1 1 1
+# Abyssinian_103 1 1 1
 
 class PetClassificationDataset(Dataset):
-    def __init__(self, image_dir, list_file, transform=None, train_only=True):
+    def __init__(
+            self, 
+            image_dir, 
+            list_file, 
+            transform=None, 
+            # train_only=True
+        ):
         self.image_dir = image_dir
         self.transform = transform
         self.samples = []
@@ -20,10 +36,10 @@ class PetClassificationDataset(Dataset):
                     # Skip malformed lines
                     continue  
 
-                image_name, class_id, species, split = parts
+                image_name, class_id, species, breed_id = parts
                 
-                if train_only and int(split) != 1:
-                    continue
+                # if train_only and int(split) != 1:
+                #     continue
 
                 # Make label 0-based
                 self.samples.append((image_name + ".jpg", int(class_id) - 1))  
@@ -56,10 +72,12 @@ class PetSegmentationDataset(Dataset):
                 parts = line.strip().split()
                 if len(parts) != 4:
                     continue
-                image_name, _, _, split = parts
-                if int(split) == 1:  # 只选训练集
-                    mask_name = image_name + '_mask.png'
-                    self.samples.append((image_name + '.jpg', mask_name))
+                image_name, _, _, _ = parts
+                # if int(split) == 1:  # 只选训练集
+                #     mask_name = image_name + '_mask.png'
+                #     self.samples.append((image_name + '.jpg', mask_name))
+                mask_name = image_name + '_mask.png'
+                self.samples.append((image_name + '.jpg', mask_name))
 
     def __len__(self):
         return len(self.samples)

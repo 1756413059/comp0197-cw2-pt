@@ -2,6 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models import resnet18, resnet50, ResNet18_Weights, ResNet50_Weights
+from torchvision.models import mobilenet_v3_small
+
+def get_mobilenet_v3_small(num_classes=37):
+    model = mobilenet_v3_small(weights='DEFAULT')
+    in_features = model.classifier[3].in_features
+    model.classifier[3] = nn.Linear(in_features, num_classes)
+    return model
 
 # resnet18 and resnet50 models for classification tasks
 def get_resnet18(num_classes=37, pretrained=True):

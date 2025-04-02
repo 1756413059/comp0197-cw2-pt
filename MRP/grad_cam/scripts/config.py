@@ -1,4 +1,5 @@
 import os
+import torch
 
 # === Project structure ===
 # This file lives in: comp0197-cw2-pt/MRP/resnet_cam_unet/scripts/
@@ -29,5 +30,7 @@ OUTPUT_DIR = os.path.join(TOP_LEVEL_DIR, 'outputs', EXPERIMENT_NAME)
 
 CHECKPOINT_DIR = os.path.join(OUTPUT_DIR, 'checkpoints')       # classifier + segmentor weights
 CAM_DIR        = os.path.join(OUTPUT_DIR, 'suppress_cams')              # optional CAM visualizations
-MASK_DIR       = os.path.join(OUTPUT_DIR, 'ngc_pseudo_masks')      # CAM → masks
+MASK_DIR       = os.path.join(OUTPUT_DIR, 'suppresscam_pseudo_masks')      # CAM → masks
 PRED_DIR       = os.path.join(OUTPUT_DIR, 'preds')             # segmentation output masks
+
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

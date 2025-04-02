@@ -10,7 +10,7 @@ import matplotlib.cm as cm
 # Add project root for config import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.config import IMAGE_DIR, TRAIN_FILE, CHECKPOINT_DIR, CAM_DIR
+from scripts.config import IMAGE_DIR, TRAIN_FILE, CHECKPOINT_DIR, CAM_DIR, DEVICE
 from utils.dataset import PetClassificationDataset
 from utils.model import get_resnet18, get_mobilenet_v3_small, get_resnet50
 from utils.grad_cam_utils import generate_grad_cam, generate_grad_cam_mobilenet
@@ -67,15 +67,15 @@ if __name__ == '__main__':
         if model_name == "resnet18":
             final_conv_layer = 'layer4'
             model = get_resnet18(num_classes=37)
-            state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch5.pth'), map_location='cpu')
+            state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch5.pth'), map_location=DEVICE)
         elif model_name == "resnet50":
             final_conv_layer = 'layer4'
             model = get_resnet50()
-            state_dict=(torch.load(os.path.join(CHECKPOINT_DIR, 'resnet50_epoch4.pth'), map_location='cpu'))
+            state_dict=(torch.load(os.path.join(CHECKPOINT_DIR, 'resnet50_epoch4.pth'), map_location=DEVICE))
         elif model_name == "mobilenet":
             final_conv_layer = 'features.12.0'
             model = get_mobilenet_v3_small(37)
-            state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'mobilenet_epoch9.pth'), map_location='cpu')
+            state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'mobilenet_epoch9.pth'), map_location=DEVICE)
         else:
             raise ValueError(f"Invalid model name: {model_name}")
         

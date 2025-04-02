@@ -11,7 +11,7 @@ import copy
 # Add project root for config import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.config import IMAGE_DIR, TRAIN_FILE, CHECKPOINT_DIR, MASK_DIR, TRIMAP_DIR
+from scripts.config import IMAGE_DIR, TRAIN_FILE, CHECKPOINT_DIR, MASK_DIR, TRIMAP_DIR, DEVICE, TEST_FILE
 from utils.dataset import PetClassificationDataset
 from utils.model import get_resnet18, get_mobilenet_v3_small, get_resnet50
 from utils.grad_cam_utils import generate_grad_cam
@@ -29,34 +29,34 @@ transform = transforms.Compose([
 ])
 
 # Load dataset (training only)
-dataset = PetClassificationDataset(IMAGE_DIR, TRAIN_FILE, transform=transform)
+dataset = PetClassificationDataset(IMAGE_DIR, TEST_FILE, transform=transform)
 
 
+model_name = "resnet18"
 model_name = "mobilenet"
-# model_name = "mobilenet"
 
 if model_name == "resnet18":
     final_conv_layer = 'layer4'
     model = get_resnet18(num_classes=37)
-    state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch5.pth'), map_location='cpu')
+    state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch5.pth'), map_location=DEVICE)
 elif model_name == "resnet50":
     final_conv_layer = 'layer4'
     model = get_resnet50()
-    state_dict=(torch.load(os.path.join(CHECKPOINT_DIR, 'resnet50_epoch4.pth'), map_location='cpu'))
+    state_dict=(torch.load(os.path.join(CHECKPOINT_DIR, 'resnet50_epoch4.pth'), map_location=DEVICE))
 elif model_name == "mobilenet":
     final_conv_layer = 'features.12.0'
     model = get_mobilenet_v3_small(37)
-    state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'mobilenet_epoch9.pth'), map_location='cpu')
+    state_dict = torch.load(os.path.join(CHECKPOINT_DIR, 'mobilenet_epoch9.pth'), map_location=DEVICE)
 else:
     raise ValueError(f"Invalid model name: {model_name}")
 
 model.load_state_dict(state_dict)
 
 compute_mIoU = True
-save_cam = True
+save_cam = False
 
 
-num_samples = 40
+num_samples = 1000
 
 ds_len = 1000 # len(dataset)
 
@@ -68,7 +68,7 @@ included_classes = [i for i in range(0,37)]
 # else:
 #     threshold = 0.25
 
-threshold_sweep = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
+threshold_sweep = [0.05*i for i in range(1, 20)]
 mIoU = [0] * len(threshold_sweep)
 
 
@@ -111,8 +111,6 @@ for c in tqdm.tqdm(range(num_samples)):
     mask_sweep = [cam_to_mask(cam, threshold=t,keep_largest_cluster=True) for t in threshold_sweep]
 
     filename = os.path.splitext(image_name)[0]
-    # mask_img = Image.fromarray(mask, mode='L')
-    # mask_img.save(os.path.join(MASK_DIR, f'{filename}_mask_{model_name}.png'))
 
     if compute_mIoU:
         # Calculate mIoU
@@ -134,11 +132,19 @@ for c in tqdm.tqdm(range(num_samples)):
         # union = np.logical_or(gt_mask, mask).sum()
         # mIoU += intersection / union
 
-# makemIoU 4 decimal place
+    # save best mask
+    if save_cam:
+        mask = mask_sweep[np.argmax(mIoU)]
+        mask_img = Image.fromarray(mask * 255,mode='L')
+        mask_img.save(os.path.join(MASK_DIR, f'{filename}_mask.png'))
+
+# make mIoU 4 decimal place and python floats instead of numpy floats
 mIoU = [round(i/num_samples, 4) for i in mIoU]
+
 print("Model name: ", model_name)
 print(f"This is SuppressCAM with included classes: {included_classes}, threshold: {threshold_sweep}")
 print(f"Mean IoU over {num_samples} samples: {mIoU}")
+print(f"Best IoU: {max(mIoU)} at threshold: {threshold_sweep[np.argmax(mIoU)]}")
 
 
 print("✅ All pseudo masks generated.")

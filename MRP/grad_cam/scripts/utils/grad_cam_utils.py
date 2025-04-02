@@ -173,6 +173,10 @@ def generate_grad_cam(
         gradients.clear()
         gradients.append(grad_out[0])
 
+    # print("named_modules: ", dict(model.named_modules()).keys())
+    # sys.exit()
+
+
     module = dict(model.named_modules())[final_conv_layer]
     fwd_handle = module.register_forward_hook(forward_hook)
     bwd_handle = module.register_backward_hook(backward_hook)
@@ -205,7 +209,7 @@ def generate_grad_cam(
 
 
         
-        # Negate for non-target classes
+        # # Negate for non-target classes
         if class_idx != target_class:
             cam = -cam
 
@@ -222,21 +226,30 @@ def generate_grad_cam(
         else:
             cams.append(cam.squeeze().detach().cpu().numpy())
 
-    # strategy 1: aggregate the negative cams and max with the positive cam
-    # aggregate the negative cams and max with the positive cam
+    # # strategy 1: aggregate the negative cams and max with the positive cam
+    # # aggregate the negative cams and max with the positive cam
     if len(cams) == 0:
         cams = target_cls_cam
     else:
         cams = aggregate_fn(cams)
         # optinally normalize the negative cams
         # cams = (cams - cams.min()) / (cams.max() - cams.min() + 1e-8)
+        # target_cls_cam = (target_cls_cam - target_cls_cam.min()) / (target_cls_cam.max() - target_cls_cam.min() + 1e-8)
         # max with the positive cam
         cams = np.maximum.reduce([cams, target_cls_cam])
 
-    # # strategy 2: aggregate all cams
+    # # strategy 2: aggregate all cams by averaging
     # cams.append(target_cls_cam)
     # cams = aggregate_fn(cams)
     # cams = (cams - cams.min()) / (cams.max() - cams.min() + 1e-8)
+
+    # # strategy 3: average all cams by maxing
+    # cams.append(target_cls_cam)
+    # cams = np.maximum.reduce(cams)
+    # cams = (cams - cams.min()) / (cams.max() - cams.min() + 1e-8)
+
+
+
 
     # cams = torch.stack(cams, dim=0)
 

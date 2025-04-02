@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.config import IMAGE_DIR, MASK_DIR, LIST_FILE, CHECKPOINT_DIR
+from scripts.config import IMAGE_DIR, MASK_DIR, LIST_FILE, CHECKPOINT_DIR, TRAIN_LIST_FILE, TEST_LIST_FILE
 from utils.dataset import PetSegmentationDataset
 from utils.model import get_unet
 
@@ -18,11 +18,19 @@ epochs = 10
 lr = 1e-4
 
 # === Load dataset ===
-dataset = PetSegmentationDataset(IMAGE_DIR, MASK_DIR, LIST_FILE)
+dataset = PetSegmentationDataset(IMAGE_DIR, MASK_DIR, TRAIN_LIST_FILE)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-# === Init model ===
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# ==== Auto-select device: CUDA > MPS > CPU ====
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+elif torch.backends.mps.is_available():
+    device = torch.device("mps")
+else:
+    device = torch.device("cpu")
+
+print(f"Using device: {device}")
+
 model = get_unet().to(device)
 
 # === Loss & Optimizer ===

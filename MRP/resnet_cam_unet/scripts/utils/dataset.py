@@ -5,7 +5,7 @@ import torchvision.transforms.functional as TF
 
 
 class PetClassificationDataset(Dataset):
-    def __init__(self, image_dir, list_file, transform=None, train_only=True):
+    def __init__(self, image_dir, list_file, transform=None):
         self.image_dir = image_dir
         self.transform = transform
         self.samples = []
@@ -20,11 +20,8 @@ class PetClassificationDataset(Dataset):
                     # Skip malformed lines
                     continue  
 
-                image_name, class_id, species, split = parts
+                image_name, class_id, species, breed_id = parts
                 
-                if train_only and int(split) != 1:
-                    continue
-
                 # Make label 0-based
                 self.samples.append((image_name + ".jpg", int(class_id) - 1))  
 

@@ -61,14 +61,14 @@ num_samples = 40
 ds_len = 1000 # len(dataset)
 
 included_classes = [i for i in range(0,37)]
-included_classes = []
+# included_classes = []
 
 # if len(included_classes):
 #     threshold = 0.3
 # else:
 #     threshold = 0.25
 
-threshold_sweep = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+threshold_sweep = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
 mIoU = [0] * len(threshold_sweep)
 
 

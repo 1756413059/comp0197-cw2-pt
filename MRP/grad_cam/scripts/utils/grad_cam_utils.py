@@ -185,6 +185,7 @@ def generate_grad_cam(
     # cams = torch.zeros((len(gather_classes), *feature_maps[0].shape[2:]), 
     #                   device=image_tensor.device)
     cams=[]
+    target_cls_cam = None
 
     # Compute gradients for gather_classes
     for class_idx in gather_classes:
@@ -215,10 +216,28 @@ def generate_grad_cam(
 
         # Upsample to input size (MobileNetV3 uses 224x224 by default)
         cam = F.interpolate(cam.unsqueeze(0).unsqueeze(0), size=image_tensor.shape[-2:], mode='bilinear', align_corners=False)
-            
-        cams.append(cam.squeeze().detach().cpu().numpy())
+        
+        if class_idx == target_class:
+            target_cls_cam = cam.squeeze().detach().cpu().numpy()
+        else:
+            cams.append(cam.squeeze().detach().cpu().numpy())
 
-    cams = aggregate_fn(cams)
+    # strategy 1: aggregate the negative cams and max with the positive cam
+    # aggregate the negative cams and max with the positive cam
+    if len(cams) == 0:
+        cams = target_cls_cam
+    else:
+        cams = aggregate_fn(cams)
+        # optinally normalize the negative cams
+        # cams = (cams - cams.min()) / (cams.max() - cams.min() + 1e-8)
+        # max with the positive cam
+        cams = np.maximum.reduce([cams, target_cls_cam])
+
+    # # strategy 2: aggregate all cams
+    # cams.append(target_cls_cam)
+    # cams = aggregate_fn(cams)
+    # cams = (cams - cams.min()) / (cams.max() - cams.min() + 1e-8)
+
     # cams = torch.stack(cams, dim=0)
 
     # Cleanup

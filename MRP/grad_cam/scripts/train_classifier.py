@@ -11,7 +11,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import models, transforms
 from utils.dataset import PetClassificationDataset
-from utils.model import get_resnet18, get_mobilenet_v3_small
+from utils.model import get_resnet18, get_mobilenet_v3_small, get_resnet50
 
 
 
@@ -49,6 +49,39 @@ def train_classifier(data_root, train_file, model_name="resnet",val_file=None, c
 
     if model_name == "resnet":
         model = get_resnet18(num_classes=num_classes).to(device)
+        # model = resnet18(pretrained=True)
+
+        # Freeze all layers first
+        for param in model.parameters():
+            param.requires_grad = False
+
+        # Unfreeze the last residual block (layer4) and FC layer
+        for param in model.layer4.parameters():
+            param.requires_grad = True
+
+        # Replace the FC layer (in_features=512 for ResNet-18)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+        # Move model to device
+        model = model.to(device)
+    elif model_name == "resnet50":
+        model = get_resnet50(num_classes=num_classes).to(device)
+
+        # Freeze all layers first
+        for param in model.parameters():
+            param.requires_grad = False
+
+        # Unfreeze the last residual block (layer4) and FC layer
+        for param in model.layer4.parameters():
+            param.requires_grad = True
+
+        # Replace the FC layer (in_features=512 for ResNet-18)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+        # Move model to device
+        model = model.to(device)
+
+
     elif model_name == "mobilenet":
         model = get_mobilenet_v3_small().to(device)
     else:
@@ -57,7 +90,11 @@ def train_classifier(data_root, train_file, model_name="resnet",val_file=None, c
     
     # loss function and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = optim.Adam(
+        model.parameters(), 
+        lr=lr, 
+        # weight_decay=1e-4
+        )
 
 
     # train model
@@ -138,9 +175,10 @@ if __name__ == '__main__':
         ckpt_dir=CHECKPOINT_DIR,
         num_classes=37,
         batch_size=64,
-        epochs=20,
+        epochs=5,
         lr=1e-4,
         mixup=False,
-        early_stop=True,
-        model_name="mobilenet"
+        early_stop=False,
+        # model_name="mobilenet"
+        model_name="resnet50"
     )

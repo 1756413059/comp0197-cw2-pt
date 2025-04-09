@@ -3,17 +3,18 @@ import sys
 import torch
 from PIL import Image
 import numpy as np
-from torchvision import transforms
+from tqdm import tqdm
 
-# === Add project root for importing config ===
+# === Add project root for imports ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.config import IMAGE_DIR, MASK_DIR, LIST_FILE, CHECKPOINT_DIR, PRED_DIR
+from scripts.config import IMAGE_DIR, LIST_FILE, CHECKPOINT_DIR, PRED_DIR
 from utils.model import get_unet
-from utils.dataset import PetSegmentationDataset
+from utils.dataset import GTMaskDataset
 
-# === Load model ===
-model_path = os.path.join(CHECKPOINT_DIR, 'supervised_baseline.pth')
+# === Setup
+model_path = os.path.join(CHECKPOINT_DIR, 'fully_supervised.pth')
+mask_dir = os.path.join(os.path.dirname(CHECKPOINT_DIR), 'gt_masks')
 os.makedirs(PRED_DIR, exist_ok=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,29 +22,22 @@ model = get_unet().to(device)
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
-# === Load dataset
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225])
-])
+# === Load dataset (same transform as training)
+dataset = GTMaskDataset(IMAGE_DIR, mask_dir, LIST_FILE)
 
-dataset = PetSegmentationDataset(IMAGE_DIR, MASK_DIR, LIST_FILE, transform=transform)
-
-# === Predict and save masks
+# === Predict and save
+print("Generating predictions for first 10 samples...")
 with torch.no_grad():
-    for idx in range(10):  # Predict first 10 images
-        image, _ = dataset[idx]
+    for idx in tqdm(range(10)):
+        image, _, image_name = dataset[idx]
         image_tensor = image.unsqueeze(0).to(device)
 
         output = model(image_tensor)
         pred_mask = torch.sigmoid(output).squeeze().cpu().numpy()
-
         pred_mask = (pred_mask > 0.5).astype(np.uint8) * 255
 
-        filename = dataset.samples[idx][0].replace('.jpg', '_pred.png')
+        filename = image_name.replace('.jpg', '_pred.png')
         save_path = os.path.join(PRED_DIR, filename)
         Image.fromarray(pred_mask, mode='L').save(save_path)
 
-print("Saved prediction masks to outputs/preds/")
+print(f"Saved predicted masks to: {PRED_DIR}")

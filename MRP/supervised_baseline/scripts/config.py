@@ -27,3 +27,4 @@ OUTPUT_DIR = os.path.join(TOP_LEVEL_DIR, 'outputs', EXPERIMENT_NAME)
 
 CHECKPOINT_DIR = os.path.join(OUTPUT_DIR, 'checkpoints')       # classifier + segmentor weights
 PRED_DIR       = os.path.join(OUTPUT_DIR, 'preds')             # segmentation output masks
+MASK_DIR       = os.path.join(OUTPUT_DIR, 'gt_masks')      # CAM → masks

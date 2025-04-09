@@ -84,3 +84,43 @@ class PetSegmentationDataset(Dataset):
         mask = (mask > 0.5).float()  # 转为 0/1 单通道 mask
 
         return image, mask
+    
+class GTMaskDataset(Dataset):
+    def __init__(self, image_dir, mask_dir, list_file, transform=None):
+        self.image_dir = image_dir
+        self.mask_dir = mask_dir
+        self.transform = transform
+        self.samples = []
+
+        with open(list_file, 'r') as f:
+            for line in f:
+                if line.startswith('#'):
+                    continue
+                parts = line.strip().split()
+                if len(parts) != 4:
+                    continue
+                image_name, _, _, split = parts
+                if int(split) == 1:
+                    self.samples.append((image_name + '.jpg', image_name + '_mask.png'))
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        image_name, mask_name = self.samples[idx]
+        image_path = os.path.join(self.image_dir, image_name)
+        mask_path = os.path.join(self.mask_dir, mask_name)
+
+        image = Image.open(image_path).convert('RGB')
+        mask = Image.open(mask_path).convert('L')
+
+        image = TF.resize(image, (224, 224))
+        image = TF.to_tensor(image)
+        image = TF.normalize(image, [0.485, 0.456, 0.406],
+                                     [0.229, 0.224, 0.225])
+
+        mask = TF.resize(mask, (224, 224))
+        mask = TF.to_tensor(mask)
+        mask = (mask > 0.5).float()  # Convert 255 → 1.0
+
+        return image, mask, image_name

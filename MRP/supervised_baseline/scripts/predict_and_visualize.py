@@ -13,7 +13,7 @@ from utils.model import get_unet
 from utils.dataset import GTMaskDataset
 
 # === Setup
-model_path = os.path.join(CHECKPOINT_DIR, 'fully_supervised.pth')
+model_path = os.path.join(CHECKPOINT_DIR, 'fully_supervised_resnet18.pth')
 mask_dir = os.path.join(os.path.dirname(CHECKPOINT_DIR), 'gt_masks')
 os.makedirs(PRED_DIR, exist_ok=True)
 

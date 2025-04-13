@@ -3,11 +3,10 @@ import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 import random
 import numpy as np
-import segmentation_models_pytorch as smp
 
 # === Set up paths ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -18,7 +17,7 @@ from scripts.evaluate_supevised import evaluate_model
 
 # === Paths ===
 MASK_DIR = os.path.join(os.path.dirname(CHECKPOINT_DIR), 'gt_masks')
-SAVE_PATH = os.path.join(CHECKPOINT_DIR, 'fully_supervised_resnet18.pth')
+SAVE_PATH = os.path.join(CHECKPOINT_DIR, 'fully_supervised_20.pth')
 
 # === Reproducibility
 torch.manual_seed(42)

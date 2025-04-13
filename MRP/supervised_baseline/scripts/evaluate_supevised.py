@@ -3,6 +3,7 @@ import sys
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
+from sklearn.metrics import jaccard_score, f1_score
 
 # Add project root for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -12,13 +13,10 @@ from utils.model import get_unet
 from utils.dataset import GTMaskDataset
 
 def compute_iou(pred, target):
-    intersection = (pred & target).sum()
-    union = (pred | target).sum()
-    return intersection / (union + 1e-8)
+    return jaccard_score(target.flatten(), pred.flatten())
 
 def compute_dice(pred, target):
-    intersection = (pred & target).sum()
-    return 2. * intersection / (pred.sum() + target.sum() + 1e-8)
+    return f1_score(target.flatten(), pred.flatten())
 
 def evaluate_model(model, dataset, batch_size=8, device='cpu', verbose=True):
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
@@ -38,10 +36,13 @@ def evaluate_model(model, dataset, batch_size=8, device='cpu', verbose=True):
             preds = (preds > 0.5).cpu().numpy().astype(np.uint8)
             masks = masks.cpu().numpy().astype(np.uint8)
             
-            # Accumulate metrics for each sample
             for p, g in zip(preds, masks):
-                iou = compute_iou(p.squeeze(), g.squeeze())
-                dice = compute_dice(p.squeeze(), g.squeeze())
+                p = np.squeeze(p)
+                g = np.squeeze(g)
+
+                iou = compute_iou(p, g)
+                dice = compute_dice(p, g)
+
                 total_iou += iou
                 total_dice += dice
                 n_samples += 1
@@ -62,7 +63,7 @@ def evaluate_model(model, dataset, batch_size=8, device='cpu', verbose=True):
 
 # === CLI Entrypoint ===
 if __name__ == "__main__":
-    model_path = os.path.join(CHECKPOINT_DIR, 'unet_seg_supervised.pth')
+    model_path = os.path.join(CHECKPOINT_DIR, 'fully_supervised_20.pth')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model = get_unet().to(device)

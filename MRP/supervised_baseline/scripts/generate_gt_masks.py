@@ -19,7 +19,7 @@ with open(LIST_FILE, 'r') as f:
         if line.startswith('#') or not line.strip():
             continue
         parts = line.strip().split()
-        if len(parts) == 4 and int(parts[3]) == 1:  # train split only
+        if len(parts) == 4:
             image_names.append(parts[0])
 
 print(f"Processing {len(image_names)} trimaps...")

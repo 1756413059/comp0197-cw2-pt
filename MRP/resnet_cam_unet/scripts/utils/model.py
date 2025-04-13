@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models import resnet18, resnet50, ResNet18_Weights, ResNet50_Weights
+from torchvision.models.segmentation import deeplabv3_resnet50
 
 # resnet18 and resnet50 models for classification tasks
 def get_resnet18(num_classes=37, pretrained=True):
@@ -57,5 +58,27 @@ class UNet(nn.Module):
         out = self.out(d1)
         return out
 
-def get_unet():
-    return UNet(in_channels=3, out_channels=1)
+
+def get_segmentor(model_name='deeplabv3', num_classes=1):
+    if model_name == 'deeplabv3':
+        model = deeplabv3_resnet50(weights=None, num_classes=num_classes)
+    elif model_name == 'unet':
+        model = UNet(in_channels=3, out_channels=num_classes)
+    else:
+        raise ValueError(f"Unsupported model: {model_name}")
+    return model
+
+def freeze_backbone(model, unfreeze_layers=('layer4',)):
+    """
+    Freeze backbone except specific layers.
+    """
+    for name, param in model.backbone.named_parameters():
+        if any(name.startswith(layer) for layer in unfreeze_layers):
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+            print(f" - Frozen: backbone.{name}")
+
+    # Make sure classifier head is trainable
+    for name, param in model.classifier.named_parameters():
+        param.requires_grad = True

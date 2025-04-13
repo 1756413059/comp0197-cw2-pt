@@ -8,7 +8,7 @@ from torchvision import transforms
 # Add project root for config import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.config import IMAGE_DIR, LIST_FILE, CHECKPOINT_DIR, MASK_DIR
+from scripts.config import IMAGE_DIR, LIST_FILE, CHECKPOINT_DIR, MASK_DIR, TRAIN_LIST_FILE, TEST_LIST_FILE
 from utils.dataset import PetClassificationDataset
 from utils.model import get_resnet18
 from utils.cam_utils import generate_cam
@@ -26,16 +26,16 @@ transform = transforms.Compose([
 ])
 
 # Load dataset (training only)
-dataset = PetClassificationDataset(IMAGE_DIR, LIST_FILE, transform=transform, train_only=True)
+dataset = PetClassificationDataset(IMAGE_DIR, LIST_FILE, transform=transform)
 
 # Load trained classifier
 model = get_resnet18(num_classes=37)
-model.load_state_dict(torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls.pth'), map_location='cpu'))
+model.load_state_dict(torch.load(os.path.join(CHECKPOINT_DIR, 'resnet18_cls_epoch_10.pth'), map_location='mps', weights_only=True))
 
 # Generate pseudo masks
 for image_tensor, label, image_name in dataset:
     cam = generate_cam(model, image_tensor, target_class=label)
-    mask = cam_to_mask(cam, threshold=0.25)
+    mask = cam_to_mask(cam, threshold=0.55)
 
     filename = os.path.splitext(image_name)[0]
     mask_img = Image.fromarray(mask, mode='L')

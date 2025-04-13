@@ -45,7 +45,7 @@ dataset = PetSegmentationDataset(IMAGE_DIR, MASK_DIR, LIST_FILE, transform=trans
 # === Predict and save masks
 # === Predict and save masks
 with torch.no_grad():
-    for idx in range(10):  # Predict first 10 images
+    for idx in range(100):  # Predict first 10 images
         image, _ = dataset[idx]
         image_tensor = image.unsqueeze(0).to(device)
 

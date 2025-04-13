@@ -13,6 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.config import IMAGE_DIR, LIST_FILE, CHECKPOINT_DIR
 from utils.dataset import GTMaskDataset
 from scripts.evaluate_supevised import evaluate_model
+from utils.model import get_unet
 
 # === Paths ===
 MASK_DIR = os.path.join(os.path.dirname(CHECKPOINT_DIR), 'gt_masks')
@@ -40,14 +41,8 @@ train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=True)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, pin_memory=True)
 
-# === Model: U-Net with ResNet-18 encoder ===
-import segmentation_models_pytorch as smp
-model = smp.Unet(
-    encoder_name="resnet18",        # Use ResNet-18
-    encoder_weights="imagenet", 
-    in_channels=3,
-    classes=1,
-).to(device)
+# === Model ===
+model = get_unet().to(device)
 
 # === Loss and Optimizer
 def dice_loss(pred, target, smooth=1.):

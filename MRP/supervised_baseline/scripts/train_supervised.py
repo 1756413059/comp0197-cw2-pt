@@ -37,13 +37,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 dataset = GTMaskDataset(IMAGE_DIR, MASK_DIR, LIST_FILE)
 loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=True)
 
-# Model: U-Net with ResNet-18 encoder
-model = smp.Unet(
-    encoder_name="resnet18",        # Use ResNet-18
-    encoder_weights="imagenet",     # Pretrained on ImageNet
-    in_channels=3,                  # RGB images
-    classes=1,                      # Binary segmentation output
-).to(device)
+# Model: U-Net
+model = get_unet().to(device)
 
 # === Loss and Optimizer
 def dice_loss(pred, target, smooth=1.):

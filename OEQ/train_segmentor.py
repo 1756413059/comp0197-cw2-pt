@@ -46,5 +46,5 @@ if __name__ == '__main__':
 
     # Save the trained model
     filename = f"unet_{model}.pth"
-    torch.save(model.state_dict(), os.path.join("saved_models", filename))
+    torch.save(model.state_dict(), filename)
     print(f"Model successfully trained for {model} and saved as {filename}.")

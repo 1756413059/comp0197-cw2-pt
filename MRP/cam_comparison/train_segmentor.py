@@ -13,8 +13,8 @@ if __name__ == '__main__':
         "cam",
     ]
     for model in models:
-        pseudo_train_dir = os.path.join("output", model, "train")
-        pseudo_test_dir = os.path.join("output", model, "test")
+        pseudo_train_dir = os.path.join("output", "raw", model, "train")
+        pseudo_test_dir = os.path.join("output", "raw", model, "test")
 
         # Define a transform for the images
         transform = transforms.Compose([

@@ -4,16 +4,24 @@ This repository contains code for comparing different weakly supervised segmenta
 
 ## Experimental Workflow
 
-### Step 1: Finetune ResNet-50
+### Step 1: 
 
-Navigate to the CAM comparison directory and fine-tune the ResNet-50 model:
+Navigate to the CAM comparison directory and download data:
 
 ```bash
 cd MRP/cam_comparison
+python download_data.py
+```
+
+### Step 2: Finetune ResNet-50
+
+Fine-tune the ResNet-50 model using the dataset:
+
+```bash
 python train_classifier.py
 ```
 
-### Step 2: Generate CAM for the Training Set
+### Step 3: Generate CAM for the Training Set
 
 After training the classifier, generate Class Activation Maps (CAM) for the training dataset:
 
@@ -21,7 +29,7 @@ After training the classifier, generate Class Activation Maps (CAM) for the trai
 python generate_cam.py
 ```
 
-### Step 3: Train U-Net with Pseudo-Labels
+### Step 4: Train U-Net with Pseudo-Labels
 
 Train the U-Net segmentation model using the pseudo-labels created from CAM:
 
@@ -29,7 +37,7 @@ Train the U-Net segmentation model using the pseudo-labels created from CAM:
 python train_segmentor.py
 ```
 
-### Step 4: Generate and Evaluate the Trained Segmentor
+### Step 5: Generate and Evaluate the Trained Segmentor
 
 Finally, generate segmentation results and evaluate the performance:
 

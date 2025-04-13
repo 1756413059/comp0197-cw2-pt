@@ -15,7 +15,7 @@ from utils.model import get_resnet18
 from utils.cam_utils import generate_cam
 
 # === Number of images to visualize ===
-NUM_SAMPLES = 10  # Change this number as needed
+NUM_SAMPLES = 100  # Change this number as needed
 
 # === Create output directory ===
 os.makedirs(CAM_DIR, exist_ok=True)

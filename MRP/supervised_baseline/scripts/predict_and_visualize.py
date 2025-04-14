@@ -3,7 +3,6 @@ import sys
 import torch
 from PIL import Image
 import numpy as np
-from tqdm import tqdm
 
 # === Add project root for imports ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -26,9 +25,9 @@ model.eval()
 dataset = GTMaskDataset(IMAGE_DIR, mask_dir, LIST_FILE)
 
 # === Predict and save
-print("Generating predictions for first 10 samples...")
+print("Generating predictions for first 20 samples...")
 with torch.no_grad():
-    for idx in tqdm(range(10)):
+    for idx in range(20):
         image, _, image_name = dataset[idx]
         image_tensor = image.unsqueeze(0).to(device)
 
@@ -39,5 +38,8 @@ with torch.no_grad():
         filename = image_name.replace('.jpg', '_pred.png')
         save_path = os.path.join(PRED_DIR, filename)
         Image.fromarray(pred_mask, mode='L').save(save_path)
+
+        # Optional: print progress
+        print(f"[{idx + 1}/20] Saved: {filename}")
 
 print(f"Saved predicted masks to: {PRED_DIR}")

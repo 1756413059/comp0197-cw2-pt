@@ -1,0 +1,33 @@
+Instructions for Running main.py
+===============================
+To train the U-Net model with fully-supervised ground-truth masks:
+
+python main.py
+
+This will:
+- Train the model for 25 epochs
+- Save model weights to checkpoints/fully_supervised.pth
+- Evaluate the model on validation and test sets
+
+How to Run Evaluation Only (Optional)
+-------------------------------------
+You can evaluate a trained model by running:
+
+python scripts/evaluate_supervised.py
+
+Ensure the model path (fully_supervised.pth) exists and is correctly set in the script.
+
+Additional Notes
+----------------
+- Masks should be generated using the provided preprocessing script (e.g., make_gt_masks.py).
+- Predicted masks can be saved using scripts/predict.py.
+
+Evaluation Output
+------------------------
+Evaluating on test set...
+Evaluating 3669 samples...
+
+Evaluation Summary
+Average IoU: 0.6351
+Average Dice: 0.7595
+Evaluated on 3669 samples

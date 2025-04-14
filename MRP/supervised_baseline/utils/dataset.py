@@ -86,41 +86,46 @@ class PetSegmentationDataset(Dataset):
         return image, mask
     
 class GTMaskDataset(Dataset):
-    def __init__(self, image_dir, mask_dir, list_file, transform=None):
+    def __init__(self, image_dir, mask_dir, list_file, split=None, transform=None):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.transform = transform
-        self.samples = []
+        self.image_names = []
 
         with open(list_file, 'r') as f:
             for line in f:
-                if line.startswith('#'):
-                    continue
                 parts = line.strip().split()
-                if len(parts) != 4:
+                if not parts:
                     continue
-                image_name, _, _, split = parts
-                if int(split) == 1:
-                    self.samples.append((image_name + '.jpg', image_name + '_mask.png'))
+
+                # Handle trainval.txt (4 columns) or test.txt (3 columns)
+                if len(parts) == 4:
+                    image_name, _, _, set_id = parts
+                    if split is None or int(set_id) == split:
+                        self.image_names.append(image_name)
+                elif len(parts) == 3 and split is None:  # test.txt
+                    image_name = parts[0]
+                    self.image_names.append(image_name)
 
     def __len__(self):
-        return len(self.samples)
+        return len(self.image_names)
 
     def __getitem__(self, idx):
-        image_name, mask_name = self.samples[idx]
-        image_path = os.path.join(self.image_dir, image_name)
-        mask_path = os.path.join(self.mask_dir, mask_name)
+        image_name = self.image_names[idx]
+        image_path = os.path.join(self.image_dir, f"{image_name}.jpg")
+        mask_path = os.path.join(self.mask_dir, f"{image_name}_mask.png")
 
         image = Image.open(image_path).convert('RGB')
         mask = Image.open(mask_path).convert('L')
 
+        # Resize and normalize
         image = TF.resize(image, (224, 224))
         image = TF.to_tensor(image)
         image = TF.normalize(image, [0.485, 0.456, 0.406],
                                      [0.229, 0.224, 0.225])
 
-        mask = TF.resize(mask, (224, 224))
+        mask = TF.resize(mask, (224, 224), interpolation=Image.NEAREST)
         mask = TF.to_tensor(mask)
-        mask = (mask > 0.5).float()  # Convert 255 → 1.0
+        mask = (mask > 0.5).float()  # Convert binary mask from [0, 255] to [0, 1]
 
         return image, mask, image_name

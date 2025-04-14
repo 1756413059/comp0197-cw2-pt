@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from PIL import Image
-from tqdm import tqdm
 from sklearn.metrics import f1_score, jaccard_score
 
 
@@ -57,7 +56,7 @@ def compute_metrics_for_split(split, pred_dir):
 
     iou_scores = []
     dice_scores = []
-    for filename in tqdm(files, desc=f"Processing {split}"):
+    for filename in files:
         # Load predicted image
         pred_path = os.path.join(pred_dir, filename)
         pred_img = Image.open(pred_path).convert("L")

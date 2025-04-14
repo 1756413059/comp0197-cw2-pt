@@ -19,6 +19,7 @@ ANNOTATION_DIR = os.path.join(DATA_DIR, 'annotations')
 LIST_FILE = os.path.join(ANNOTATION_DIR, 'list.txt')
 TRAIN_LIST_FILE = os.path.join(ANNOTATION_DIR, 'trainval.txt')
 TEST_LIST_FILE = os.path.join(ANNOTATION_DIR, 'test.txt')
+GT_DIR = os.path.join(ANNOTATION_DIR, 'trimaps')  # Ground truth masks
 
 # === Experiment identifier ===
 # Change this name to organize outputs for different models

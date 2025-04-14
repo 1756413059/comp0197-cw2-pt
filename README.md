@@ -1,7 +1,7 @@
 
 # 📁 UCL COMP0197 Coursework Repository
 
-This is the top-level repository for the UCL COMP0197 module coursework.
+This is the repository for the UCL COMP0197: Applied Deep Learning [T2] 24/25 coursework 2.
 
 It contains multiple sub-projects related to different components of the course.
 

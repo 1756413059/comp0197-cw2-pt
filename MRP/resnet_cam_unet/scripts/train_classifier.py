@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import torch
@@ -8,7 +9,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from utils.dataset import PetClassificationDataset
-from utils.model import get_resnet18
+from utils.model import get_resnet18, get_resnet50
 from scripts.config import IMAGE_DIR, TRAIN_LIST_FILE, TEST_LIST_FILE, CHECKPOINT_DIR
 
 
@@ -34,7 +35,8 @@ def evaluate(model, dataloader, device, criterion):
 
 
 def train_classifier(data_root, train_list, val_list, save_path,
-                     num_classes=37, batch_size=32, epochs=10, lr=1e-4, weight_decay=1e-4):
+                     num_classes=37, batch_size=32, epochs=10, lr=1e-4, weight_decay=1e-4, model='resnet18'):
+    
 
     # ==== Auto-select device: CUDA > MPS > CPU ====
     if torch.cuda.is_available():
@@ -45,6 +47,8 @@ def train_classifier(data_root, train_list, val_list, save_path,
         device = torch.device("cpu")
     print(f"Using device: {device}")
 
+
+    
     # === Image Transform with Data Augmentation ===
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(224),
@@ -66,6 +70,9 @@ def train_classifier(data_root, train_list, val_list, save_path,
     train_dataset = PetClassificationDataset(data_root, train_list, train_transform)
     val_dataset = PetClassificationDataset(data_root, val_list, val_transform)
 
+    print(f"Train dataset size: {len(train_dataset)}")
+    print(f"Validation dataset size: {len(val_dataset)}")
+
     use_cuda = device.type == 'cuda'
     use_mps = device.type == 'mps'
 
@@ -78,7 +85,18 @@ def train_classifier(data_root, train_list, val_list, save_path,
         num_workers=0 if use_mps else 4, pin_memory=use_cuda
     )
 
-    model = get_resnet18(num_classes=num_classes).to(device)
+    if model == 'resnet18':
+        print("Using ResNet18")
+        model = get_resnet18(num_classes=num_classes).to(device)
+    elif model == 'resnet50':
+        print("Using ResNet50")
+        model = get_resnet50(num_classes=num_classes).to(device)
+
+        # === Check if model already exists ===
+    if os.path.exists(save_path):
+        print(f"✅ Model already exists at {save_path}. Loading and skipping training.")
+        model.load_state_dict(torch.load(save_path, map_location=device, weights_only=True))
+        return model
 
     # === Selective Layer Freezing ===
     print("🔓 Unfreezing layer3, layer4 and fc (freezing earlier layers):")
@@ -124,11 +142,11 @@ def train_classifier(data_root, train_list, val_list, save_path,
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     torch.save(model.state_dict(), save_path)
-    print(f"✅ Model saved to {save_path}")
+    print(f"Model saved to {save_path}")
 
 if __name__ == '__main__':
     epochs = 10
-    model_filename = f"resnet18_cls_epoch_{epochs}.pth"
+    model_filename = f"resnet50_cls_epoch_{epochs}.pth"
     save_path = os.path.join(CHECKPOINT_DIR, model_filename)
 
     train_classifier(
@@ -140,5 +158,6 @@ if __name__ == '__main__':
         batch_size=32,
         epochs=epochs,
         lr=1e-4,
-        weight_decay=5e-4
+        weight_decay=5e-4,
+        model = 'resnet18'  # or 'resnet18'
     )

@@ -1,4 +1,4 @@
-# 🐾 COMP0197 Coursework 2: Weakly-Supervised Semantic Segmentation
+# COMP0197 Coursework 2: Weakly-Supervised Semantic Segmentation
 
 This project implements a full pipeline for weakly-supervised semantic segmentation using Class Activation Maps (CAM) and pseudo mask generation, targeting the Oxford-IIIT Pet dataset.
 
@@ -10,7 +10,7 @@ This project implements a full pipeline for weakly-supervised semantic segmentat
 COMP0197-CW2-PT/
 ├── data/                      # Raw dataset directory
 ├── MRP/
-│   ├── cam_comparison/       # CAM ablation experiments (optional)
+│   ├── cam_comparison/       # CAM ablation experiments 
 │   └── resnet_cam_unet/      # Main pipeline implementation
 │       ├── scripts/
 │       │   ├── utils/
@@ -24,12 +24,12 @@ COMP0197-CW2-PT/
 │       │   ├── generate_cam.py          # CAM visualization (optional)
 │       │   ├── generate_pseudo_masks.py # CAM → Mask
 │       │   ├── predict_and_visualize.py # Predict and save segmentations
-│       │   ├── run_pipeline.py          # 🔁 Run full pipeline (one-click)
+│       │   ├── run_pipeline.py          # Run full pipeline 
 │       │   ├── train_classifier.py      # ResNet classifier training
 │       │   └── train_segmentor.py       # UNet / DeepLab training
 ├── supervised_baseline/      # Fully-supervised baseline code
 ├── outputs/                  # All predictions, pseudo masks, checkpoints
-├── OEQ/                      # (Optional) Coursework reflection & reports
+├── OEQ/                      # Open Ended Question
 └── README.md                 # You're reading this!
 ```
 

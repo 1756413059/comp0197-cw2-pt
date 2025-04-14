@@ -1,21 +1,13 @@
 import numpy as np
 
 def cam_to_mask(cam, threshold=0.25):
-    """
-    Convert normalized CAM [H, W] (values in [0, 1]) → binary mask [H, W] (0 or 255)
-    """
     assert isinstance(cam, np.ndarray), "CAM must be a numpy array"
     assert cam.max() <= 1.0 and cam.min() >= 0.0, "CAM should be normalized"
 
     mask = np.uint8(cam > threshold) * 255
-    return mask  # dtype: uint8, values: 0 (bg), 255 (fg)
+    return mask 
 
 def otsu_threshold(image_array):
-    """
-    image_array: CAM map, float32 in [0, 1]
-    return: int threshold in range [0, 255]
-    """
-    # Convert CAM float image to uint8 [0, 255]
     image_uint8 = np.uint8(image_array * 255)
 
     pixel_counts = np.bincount(image_uint8.flatten(), minlength=256)
@@ -37,5 +29,4 @@ def otsu_threshold(image_array):
             max_var = var_between
             threshold = t
 
-    # Convert threshold back to float in [0, 1]
     return threshold / 255.0

@@ -22,46 +22,27 @@ def train_segmentor(
     list_file=TRAIN_LIST_FILE,
     save_path=None,
 ):
-    """
-    Train a segmentation model (UNet or DeepLabV3) on pseudo or GT masks.
+    print(f"Training {model_name} for {epochs} epochs")
 
-    Args:
-        model_name (str): 'unet' or 'deeplabv3'
-        num_classes (int): Number of output classes (1 for binary)
-        batch_size (int)
-        epochs (int)
-        lr (float): Learning rate
-        image_dir (str): Path to image folder
-        mask_dir (str): Path to mask folder
-        list_file (str): Path to train list
-        save_path (str): Where to save the trained model
-    """
-    print(f"🚀 Training {model_name} for {epochs} epochs")
-
-    # === Device
     device = (
         torch.device("cuda") if torch.cuda.is_available()
         else torch.device("mps") if torch.backends.mps.is_available()
         else torch.device("cpu")
     )
-    print(f"✅ Using device: {device}")
+    print(f"Using device: {device}")
 
-    # === Dataset
     dataset = PetSegmentationDataset(image_dir, mask_dir, list_file)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    # === Model
     model = get_segmentor(model_name=model_name, num_classes=num_classes).to(device)
 
     if model_name == 'deeplabv3':
         print("Freezing backbone except layer3/layer4")
         freeze_backbone(model, unfreeze_layers=('layer3', 'layer4'))
 
-    # === Loss & Optimizer
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # === Training loop
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0
@@ -81,7 +62,6 @@ def train_segmentor(
         avg_loss = total_loss / len(dataset)
         print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
 
-    # === Save model
     if save_path is None:
         save_path = os.path.join(CHECKPOINT_DIR, f"{model_name}_seg_epoch_{epochs}.pth")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

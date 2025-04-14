@@ -44,42 +44,27 @@ def compute_metrics(pred_mask, gt_mask):
 
 
 def compute_metrics_for_split(split, pred_dir):
-    """
-    Computes the mIoU for either the train or test predictions
-
-    Args:
-        split (str): 'train' or 'test'
-        pred_dir: prediction directory
-
-    Returns:
-        miou (float): Mean Intersection over Union over all images
-    """
-    
-
     files = sorted([f for f in os.listdir(PRED_DIR) if f.endswith('.png')])
 
     iou_scores = []
     dice_scores = []
     for filename in tqdm(files, desc=f"Processing {split}"):
-        # Load predicted image
         pred_path = os.path.join(pred_dir, filename)
         pred_img = Image.open(pred_path).convert("L")
 
-        # Load the corresponding ground truth trimap
         gt_path = os.path.join(GT_DIR, f"{filename.replace('_pred.png', '.png')}")
         if not os.path.exists(gt_path):
             print(f"Ground truth not found for {filename}. Skipping.")
             continue
         gt_img = Image.open(gt_path).convert("L")
 
-        # Compute IoU for foreground and background
         dice, iou = compute_metrics(pred_img, gt_img)
         iou_scores.append(iou)
         dice_scores.append(dice)
 
     iou_mean = np.mean(iou_scores)
     dice_mean = np.mean(dice_scores)
-    print(f"\n✅ Average Dice score: {dice_mean:.4f}")
-    print(f"✅ Average IoU score:  {iou_mean:.4f}")
+    print(f"\nAverage Dice score: {dice_mean:.4f}")
+    print(f"Average IoU score:  {iou_mean:.4f}")
 
     return iou_mean, dice_mean

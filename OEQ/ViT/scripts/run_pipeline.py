@@ -18,7 +18,7 @@ from utils.mask_utils import otsu_threshold
 def run_pipeline(
     model_name='unet',
     classifier_model='resnet18',
-    threshold=0.5,  # or otsu_threshold
+    threshold=0.5,
     use_otsu=False,
     epochs_cls=10,
     epochs_seg=15
@@ -35,7 +35,7 @@ def run_pipeline(
         epochs=epochs_cls,
         lr=1e-4,
         weight_decay=5e-4,
-        model=classifier_model,  # 'resnet18' or 'resnet50'
+        model=classifier_model, 
     )
 
 
@@ -73,9 +73,9 @@ def run_pipeline(
 
 if __name__ == '__main__':
     run_pipeline(
-        model_name='unet',        # or 'deeplabv3'
-        classifier_model='resnet50',  # or 'resnet50'
-        threshold=0.5,            # or use_otsu=True
+        model_name='unet',      
+        classifier_model='resnet50',
+        threshold=0.5,        
         use_otsu=False,
         epochs_cls=10,
         epochs_seg=15

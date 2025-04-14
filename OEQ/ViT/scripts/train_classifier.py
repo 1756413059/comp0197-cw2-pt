@@ -37,8 +37,6 @@ def evaluate(model, dataloader, device, criterion):
 def train_classifier(data_root, train_list, val_list, save_path,
                      num_classes=37, batch_size=32, epochs=10, lr=1e-4, weight_decay=1e-4, model='resnet18'):
     
-
-    # ==== Auto-select device: CUDA > MPS > CPU ====
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available():
@@ -49,7 +47,6 @@ def train_classifier(data_root, train_list, val_list, save_path,
 
 
     
-    # === Image Transform with Data Augmentation ===
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
@@ -66,7 +63,6 @@ def train_classifier(data_root, train_list, val_list, save_path,
                              [0.229, 0.224, 0.225])
     ])
 
-    # === Load Dataset ===
     train_dataset = PetClassificationDataset(data_root, train_list, train_transform)
     val_dataset = PetClassificationDataset(data_root, val_list, val_transform)
 
@@ -92,14 +88,12 @@ def train_classifier(data_root, train_list, val_list, save_path,
         print("Using ResNet50")
         model = get_resnet50(num_classes=num_classes).to(device)
 
-        # === Check if model already exists ===
     if os.path.exists(save_path):
-        print(f"✅ Model already exists at {save_path}. Loading and skipping training.")
+        print(f" Model already exists at {save_path}. Loading and skipping training.")
         model.load_state_dict(torch.load(save_path, map_location=device, weights_only=True))
         return model
 
-    # === Selective Layer Freezing ===
-    print("🔓 Unfreezing layer3, layer4 and fc (freezing earlier layers):")
+    print("Unfreezing layer3, layer4 and fc (freezing earlier layers):")
     for name, param in model.named_parameters():
         if name.startswith("layer4") or name.startswith("layer3") or name.startswith("fc"):
             param.requires_grad = True
@@ -107,7 +101,6 @@ def train_classifier(data_root, train_list, val_list, save_path,
             param.requires_grad = False
             print(f" - Frozen: {name}")
 
-    # === Loss and Optimizer ===
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                            lr=lr, weight_decay=weight_decay)
@@ -159,5 +152,5 @@ if __name__ == '__main__':
         epochs=epochs,
         lr=1e-4,
         weight_decay=5e-4,
-        model = 'resnet18'  # or 'resnet18'
+        model = 'resnet18'
     )

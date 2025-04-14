@@ -5,7 +5,6 @@ from PIL import Image
 import numpy as np
 from torchvision import transforms
 
-# Add project root for config import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scripts.config import IMAGE_DIR, CHECKPOINT_DIR, MASK_DIR, TRAIN_LIST_FILE
@@ -22,20 +21,9 @@ def generate_pseudo_masks(
     model_name='resnet18',
     checkpoint_name=None
 ):
-    """
-    Generate pseudo masks from a trained classifier using CAM.
-
-    Args:
-        threshold (float or function): Threshold value or a function(cam_array) → float.
-        save_dir (str): Directory to save generated masks.
-        list_file (str): Path to classification list file.
-        model_name (str): 'resnet18' or 'resnet50'
-        checkpoint_name (str): Optional custom checkpoint filename
-    """
-    print(f"🚀 Generating pseudo masks using {model_name} | threshold = {threshold if isinstance(threshold, float) else threshold.__name__}")
+    print(f"Generating pseudo masks using {model_name} | threshold = {threshold if isinstance(threshold, float) else threshold.__name__}")
     os.makedirs(save_dir, exist_ok=True)
 
-    # === Load transform
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -43,10 +31,8 @@ def generate_pseudo_masks(
                              [0.229, 0.224, 0.225])
     ])
 
-    # === Load dataset
     dataset = PetClassificationDataset(IMAGE_DIR, list_file, transform=transform)
 
-    # === Load classifier
     if model_name == 'resnet18':
         model = get_resnet18(num_classes=37)
         ckpt_name = checkpoint_name or 'resnet18_cls_epoch_10.pth'
@@ -61,7 +47,6 @@ def generate_pseudo_masks(
     model.load_state_dict(state_dict)
     model.eval()
 
-    # === Generate and save masks
     for image_tensor, label, image_name in dataset:
         cam = generate_cam(model, image_tensor, target_class=label)
         th = threshold(cam) if callable(threshold) else threshold
@@ -71,13 +56,12 @@ def generate_pseudo_masks(
         mask_img = Image.fromarray(mask, mode='L')
         mask_img.save(os.path.join(save_dir, f'{filename}_mask.png'))
 
-    print(f"✅ Pseudo masks saved to {save_dir}")
+    print(f"Pseudo masks saved to {save_dir}")
 
 
-# === Optional: Direct run
 if __name__ == '__main__':
     generate_pseudo_masks(
         threshold=0.5,
         model_name='resnet50',
-        checkpoint_name='resnet50_cls_epoch_10.pth'  # optional override
+        checkpoint_name='resnet50_cls_epoch_10.pth'
     )

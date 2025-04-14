@@ -16,7 +16,7 @@ def run_evaluate():
                              [0.229, 0.224, 0.225])
     ])
 
-    data_root = 'oxford-iiit-pet'
+    data_root = os.path.join('oxford-iiit-pet', 'oxford-iiit-pet')
     test_dataset = PetDataset(data_root, split='test', transform=transform)
 
     model_name = "vit"

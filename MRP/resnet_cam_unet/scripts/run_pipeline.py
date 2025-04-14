@@ -100,5 +100,5 @@ if __name__ == '__main__':
         threshold=0.5,            # or use_otsu=True
         use_otsu=False,          # or True
         epochs_cls=10,
-        epochs_seg=15
+        epochs_seg=30
     )

@@ -38,8 +38,8 @@ comp0197-cw2-pt/
 │       ├── README.md
 │       └── requirements.txt
 │
-├── OEQ/                             # Optional open-ended work (currently placeholder)
-│   └── (empty or in progress)
+├── OEQ/                             # Open-ended work
+│   └── 
 │
 ├── .gitignore                       # Ignores data/, outputs/, cache, etc.
 └── README.md                        # Top-level README (project overview)

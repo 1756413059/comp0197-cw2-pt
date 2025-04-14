@@ -95,8 +95,8 @@ def run_pipeline(
 
 if __name__ == '__main__':
     run_pipeline(
-        model_name='unet',        # or 'deeplabv3'
-        classifier_model='resnet50',  # or 'resnet50'
+        model_name='deeplabv3',        # or 'deeplabv3'
+        classifier_model='resnet18',  # or 'resnet50'
         threshold=0.5,            # or use_otsu=True
         use_otsu=False,          # or True
         epochs_cls=10,

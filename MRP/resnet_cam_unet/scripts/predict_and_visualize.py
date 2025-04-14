@@ -92,7 +92,13 @@ def predict_and_save_masks(
             image_tensor = image.unsqueeze(0).to(device)
 
             output = model(image_tensor)
-            pred_mask = output.squeeze().cpu().numpy()  # [H, W]
+            if model_name == 'deeplabv3':
+                output = output['out']
+                probs = torch.sigmoid(output)  
+            else:
+                probs = output  
+
+            pred_mask = probs.squeeze().cpu().numpy()  # [H, W]
             pred_mask = (pred_mask > threshold).astype(np.uint8) * 255
 
             # Resize back to original
@@ -114,7 +120,7 @@ if __name__ == '__main__':
 
     predict_and_save_masks(
         model_name='unet',
-        model_path=os.path.join(CHECKPOINT_DIR, 'unet_seg_resnet50_cam_0.5_epoch_15.pth'),
+        model_path=os.path.join(CHECKPOINT_DIR, 'unet_seg_resnet18_cam_otsu_epoch_30.pth'),
         test_list_file=TEST_LIST_FILE,
         threshold=0.5
     )

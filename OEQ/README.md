@@ -21,6 +21,5 @@ This command will do the following:
 **Evaluate the Model:**
 
 - It evaluates the model on the test set and shows the IoU and Dice scores.
-- 
 
 Simply run python main.py to execute the whole process.

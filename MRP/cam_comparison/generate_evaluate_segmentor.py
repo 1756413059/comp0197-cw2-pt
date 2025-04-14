@@ -20,9 +20,9 @@ test_dataset = PetDataset(data_root, split='test', transform=transform)
 
 # Evaluate for all models
 models = [
-    'cam',
-    'gcam',
-    'gcampp',
+    "grad_cam_pp",
+    "grad_cam",
+    "cam",
 ]
 
 for model_name in models:

@@ -73,4 +73,4 @@ def compute_metrics_for_split(split, pred_dir):
         iou_scores.append(iou)
         dice_scores.append(dice)
 
-    return np.mean(iou_scores), np.mean(dice_scores)
+    return np.mean(dice_scores), np.mean(iou_scores)

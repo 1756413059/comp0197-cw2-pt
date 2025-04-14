@@ -44,3 +44,11 @@ Finally, generate segmentation results and evaluate the performance:
 ```bash
 python generate_evaluate_segmentor.py
 ```
+
+### Results:
+
+grad_cam_pp: Dice 0.6132, IoU 0.4589
+
+grad_cam: Dice 0.5958, IoU 0.4363
+
+cam: Dice 0.5968, IoU 0.4380

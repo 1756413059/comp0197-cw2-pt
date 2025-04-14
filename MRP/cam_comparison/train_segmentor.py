@@ -12,9 +12,9 @@ if __name__ == '__main__':
         "grad_cam",
         "cam",
     ]
-    for model in models:
-        pseudo_train_dir = os.path.join("output", "raw", model, "train")
-        pseudo_test_dir = os.path.join("output", "raw", model, "test")
+    for model_name in models:
+        pseudo_train_dir = os.path.join("output", "raw", model_name, "train")
+        pseudo_test_dir = os.path.join("output", "raw", model_name, "test")
 
         # Define a transform for the images
         transform = transforms.Compose([
@@ -67,6 +67,6 @@ if __name__ == '__main__':
             print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {test_loss:.4f}\n")
 
         # Save the trained model
-        filename = f"unet_{model}.pth"
+        filename = f"unet_{model_name}.pth"
         torch.save(model.state_dict(), filename)
-        print(f"Model successfully trained for {model} and saved as {filename}.")
+        print(f"Model successfully trained for {model_name} and saved as {filename}.")

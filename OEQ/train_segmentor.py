@@ -7,7 +7,7 @@ from utils.Unet import SegmentationDataset, UNet, CombinedLoss
 if __name__ == '__main__':
     # Set paths for the original images and the pseudo labels
     images_dir = "output_vit/images"
-    model = "vit"
+    model_name = "vit"
     pseudo_train_dir = os.path.join("output_vit", "masks")
 
     # Define a transform for the images
@@ -45,6 +45,6 @@ if __name__ == '__main__':
         print(f"Epoch {epoch + 1}/{num_epochs}, Training Loss: {epoch_loss:.4f}")
 
     # Save the trained model
-    filename = f"unet_{model}.pth"
+    filename = f"unet_{model_name}.pth"
     torch.save(model.state_dict(), filename)
     print(f"Model successfully trained for {model} and saved as {filename}.")

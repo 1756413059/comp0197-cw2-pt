@@ -1,6 +1,6 @@
 # OEQ (Open-Ended Question)
 
-**To run the ViT Segmentaion Part, open your terminal and type:**
+**To run the ViT Segmentaion Part, open the terminal in the path of the current readme and type:**
 
 python main.py
 

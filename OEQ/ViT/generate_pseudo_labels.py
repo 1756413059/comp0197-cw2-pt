@@ -113,7 +113,7 @@ def run_generate_pseudo_labels():
     dataset = OxfordIIITPet(
         root='oxford-iiit-pet', split='trainval', target_types='segmentation',
         transform=transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()]),
-        download=False
+        download=True
     )
     os.makedirs("output_vit/images", exist_ok=True)
     os.makedirs("output_vit/masks", exist_ok=True)
@@ -122,9 +122,11 @@ def run_generate_pseudo_labels():
             img_tensor, _ = dataset[idx]
             img_pil = transforms.ToPILImage()(img_tensor)
             _, vit_mask = extract_vit_mask(img_pil)
-            filename = f"{idx:04d}.png"
-            img_pil.save(os.path.join("output_vit/images", filename))
-            vit_mask.save(os.path.join("output_vit/masks", filename))
+            orig_path = dataset._images[idx]
+            orig_name = os.path.splitext(os.path.basename(orig_path))[0] 
+            img_pil.save(os.path.join("output_vit/images", f"{orig_name}.jpg"))
+            vit_mask.save(os.path.join("output_vit/masks", f"{orig_name}_mask.png"))
+
             if idx % 50 == 0:
                 print(f"Saved {idx + 1}/{len(dataset)}")
         except Exception as e:

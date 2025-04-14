@@ -1,7 +1,13 @@
 import os
 import numpy as np
 from PIL import Image
+from tqdm import tqdm
 from sklearn.metrics import f1_score, jaccard_score
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from scripts.config import PRED_DIR, GT_DIR
+
 
 
 def otsu_threshold(image_array):
@@ -48,21 +54,19 @@ def compute_metrics_for_split(split, pred_dir):
     Returns:
         miou (float): Mean Intersection over Union over all images
     """
-    # Directories for predictions and ground truth trimaps
-    pred_dir = os.path.join(pred_dir, split)
-    gt_dir = os.path.join("oxford-iiit-pet", "annotations", "trimaps")
+    
 
-    files = sorted([f for f in os.listdir(pred_dir) if f.endswith('.png')])
+    files = sorted([f for f in os.listdir(PRED_DIR) if f.endswith('.png')])
 
     iou_scores = []
     dice_scores = []
-    for filename in files:
+    for filename in tqdm(files, desc=f"Processing {split}"):
         # Load predicted image
         pred_path = os.path.join(pred_dir, filename)
         pred_img = Image.open(pred_path).convert("L")
 
         # Load the corresponding ground truth trimap
-        gt_path = os.path.join(gt_dir, filename)
+        gt_path = os.path.join(GT_DIR, f"{filename.replace('_pred.png', '.png')}")
         if not os.path.exists(gt_path):
             print(f"Ground truth not found for {filename}. Skipping.")
             continue
@@ -73,4 +77,9 @@ def compute_metrics_for_split(split, pred_dir):
         iou_scores.append(iou)
         dice_scores.append(dice)
 
-    return np.mean(iou_scores), np.mean(dice_scores)
+    iou_mean = np.mean(iou_scores)
+    dice_mean = np.mean(dice_scores)
+    print(f"\n✅ Average Dice score: {dice_mean:.4f}")
+    print(f"✅ Average IoU score:  {iou_mean:.4f}")
+
+    return iou_mean, dice_mean

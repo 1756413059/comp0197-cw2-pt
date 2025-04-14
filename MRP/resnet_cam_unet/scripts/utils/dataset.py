@@ -1,11 +1,24 @@
 import os
 from PIL import Image
-import torch
 from torch.utils.data import Dataset
 import torchvision.transforms.functional as TF
 
 
 class PetClassificationDataset(Dataset):
+    """
+    Dataset for pet classification using the Oxford-IIIT Pet dataset.
+
+    Each sample returns:
+        - A preprocessed RGB image (Tensor)
+        - A class label in [0, 36] (int)
+        - The original image filename (str)
+
+    Args:
+        image_dir (str): Path to the directory containing image files.
+        list_file (str): Path to the .txt file listing image names and labels.
+        transform (callable, optional): Optional image transform (e.g., torchvision transforms).
+    """
+
     def __init__(self, image_dir, list_file, transform=None):
         self.image_dir = image_dir
         self.transform = transform
@@ -18,12 +31,10 @@ class PetClassificationDataset(Dataset):
                     continue  
                 parts = line.strip().split()
                 if len(parts) != 4:
-                    # Skip malformed lines
                     continue  
 
                 image_name, class_id, species, breed_id = parts
                 
-                # Make label 0-based
                 self.samples.append((image_name + ".jpg", int(class_id) - 1))  
 
     def __len__(self):
@@ -40,6 +51,20 @@ class PetClassificationDataset(Dataset):
         return image, label, image_name
 
 class PetSegmentationDataset(Dataset):
+    """
+    Dataset for pet segmentation using pseudo masks or ground truth trimaps.
+
+    Each sample returns:
+        - A preprocessed RGB image (Tensor), shape [3, 224, 224]
+        - A binary mask (Tensor), shape [1, 224, 224] with values {0.0, 1.0}
+
+    Args:
+        image_dir (str): Path to images.
+        mask_dir (str): Path to masks (e.g., pseudo_masks/ or trimaps/).
+        list_file (str): Path to .txt file with image IDs and splits.
+        transform (callable, optional): Optional transform (currently unused; handled manually).
+    """
+
     def __init__(self, image_dir, mask_dir, list_file, transform=None):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
@@ -54,7 +79,7 @@ class PetSegmentationDataset(Dataset):
                 if len(parts) != 4:
                     continue
                 image_name, _, _, split = parts
-                if int(split) == 1:  # 只选训练集
+                if int(split) == 1:  
                     mask_name = image_name + '_mask.png'
                     self.samples.append((image_name + '.jpg', mask_name))
 
@@ -67,23 +92,31 @@ class PetSegmentationDataset(Dataset):
         mask_path = os.path.join(self.mask_dir, mask_name)
 
         image = Image.open(image_path).convert('RGB')
-        mask = Image.open(mask_path).convert('L')  # 灰度图（0/255）
+        mask = Image.open(mask_path).convert('L')  
 
-        # 转为 tensor 并归一化（和分类时一样）
         image = TF.resize(image, (224, 224))
         image = TF.to_tensor(image)
         image = TF.normalize(image, [0.485, 0.456, 0.406],
                                      [0.229, 0.224, 0.225])
 
-        # mask: 转为 tensor 并将 255 → 1.0
         mask = TF.resize(mask, (224, 224))
         mask = TF.to_tensor(mask)
-        mask = (mask > 0.5).float()  # 转为 0/1 单通道 mask
+        mask = (mask > 0.5).float()  
 
         return image, mask
 
-
 class PetDataset(Dataset):
+    """
+    Minimal dataset for inference only (e.g., for CAM or segmentation prediction).
+
+    Each sample returns:
+        - A preprocessed RGB image (Tensor), shape [3, 224, 224]
+
+    Args:
+        image_dir (str): Path to image folder.
+        list_file (str): Path to list file (.txt).
+        transform (callable, optional): Optional image preprocessing transform.
+    """
     def __init__(self, image_dir, list_file, transform=None):
         self.image_dir = image_dir
         self.transform = transform
@@ -110,7 +143,6 @@ class PetDataset(Dataset):
 
         image = Image.open(image_path).convert('RGB')
 
-        # 转为 tensor 并归一化（和分类时一样）
         image = TF.resize(image, (224, 224))
         image = TF.to_tensor(image)
         image = TF.normalize(image, [0.485, 0.456, 0.406],

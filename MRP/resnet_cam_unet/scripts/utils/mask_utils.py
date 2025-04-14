@@ -2,20 +2,49 @@ import numpy as np
 
 def cam_to_mask(cam, threshold=0.25):
     """
-    Convert normalized CAM [H, W] (values in [0, 1]) → binary mask [H, W] (0 or 255)
+    Converts a normalized Class Activation Map (CAM) to a binary mask.
+
+    Args:
+        cam (np.ndarray): A 2D CAM array with values in [0, 1].
+        threshold (float): A float threshold in [0, 1]. Pixels with CAM > threshold are foreground.
+
+    Returns:
+        np.ndarray: A binary mask with shape [H, W], values in {0, 255} (uint8).
+                    255 represents foreground, 0 represents background.
+
+    Raises:
+        AssertionError: If `cam` is not a numpy array or not normalized to [0, 1].
+
+    Example:
+        mask = cam_to_mask(cam, threshold=0.3)
     """
+
     assert isinstance(cam, np.ndarray), "CAM must be a numpy array"
     assert cam.max() <= 1.0 and cam.min() >= 0.0, "CAM should be normalized"
 
     mask = np.uint8(cam > threshold) * 255
-    return mask  # dtype: uint8, values: 0 (bg), 255 (fg)
-
+    return mask 
+ 
 def otsu_threshold(image_array):
     """
-    image_array: CAM map, float32 in [0, 1]
-    return: int threshold in range [0, 255]
+    Computes an adaptive threshold using Otsu's method for a grayscale heatmap.
+
+    Args:
+        image_array (np.ndarray): 2D float array with values in [0, 1] (e.g. a CAM).
+
+    Returns:
+        float: Optimal threshold value in [0, 1] computed by Otsu's method.
+
+    Notes:
+        - The input array is converted to uint8 in range [0, 255].
+        - Otsu's method maximizes the between-class variance to separate foreground and background.
+        - Commonly used for automatic CAM binarization.
+
+    Example:
+        th = otsu_threshold(cam)
+        mask = cam_to_mask(cam, threshold=th)
     """
-    # Convert CAM float image to uint8 [0, 255]
+
     image_uint8 = np.uint8(image_array * 255)
 
     pixel_counts = np.bincount(image_uint8.flatten(), minlength=256)
@@ -37,5 +66,4 @@ def otsu_threshold(image_array):
             max_var = var_between
             threshold = t
 
-    # Convert threshold back to float in [0, 1]
     return threshold / 255.0

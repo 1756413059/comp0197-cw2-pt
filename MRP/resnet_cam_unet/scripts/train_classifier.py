@@ -14,6 +14,33 @@ from scripts.config import IMAGE_DIR, TRAIN_LIST_FILE, TEST_LIST_FILE, CHECKPOIN
 
 
 def evaluate(model, dataloader, device, criterion):
+    """
+    Evaluate a classification model on a given dataset.
+
+    Performs a full forward pass on the validation/test set and computes:
+        - Average loss (CrossEntropy)
+        - Overall classification accuracy (%)
+
+    Args:
+        model (torch.nn.Module): Trained classification model (e.g., ResNet).
+        dataloader (torch.utils.data.DataLoader): DataLoader for validation or test set.
+        device (torch.device): Device to run inference on (e.g., 'cpu', 'cuda', 'mps').
+        criterion (torch.nn.Module): Loss function used for evaluation (typically nn.CrossEntropyLoss).
+
+    Returns:
+        tuple:
+            - avg_loss (float): Mean loss over the entire dataset.
+            - acc (float): Overall top-1 accuracy (%).
+
+    Notes:
+        - Model is set to `eval()` mode during evaluation.
+        - `torch.no_grad()` is used to disable gradient computation for efficiency.
+        - Assumes output logits and integer ground-truth labels.
+
+    Example:
+        >>> val_loss, val_acc = evaluate(model, val_loader, device, nn.CrossEntropyLoss())
+        >>> print(f"Validation Accuracy: {val_acc:.2f}%")
+    """
     model.eval()
     total_loss = 0.0
     correct = 0
@@ -36,20 +63,50 @@ def evaluate(model, dataloader, device, criterion):
 
 def train_classifier(data_root, train_list, val_list, save_path,
                      num_classes=37, batch_size=32, epochs=10, lr=1e-4, weight_decay=1e-4, model='resnet18'):
-    
+    """
+    Train an image classifier (ResNet18 or ResNet50) on the Oxford-IIIT Pet dataset.
 
-    # ==== Auto-select device: CUDA > MPS > CPU ====
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
+    This function performs supervised image classification training and validation.
+    It also supports selective layer freezing and saves model checkpoints.
+
+    Args:
+        data_root (str): Path to the image folder.
+        train_list (str): Path to list file for training set.
+        val_list (str): Path to list file for validation set.
+        save_path (str): Path to save the trained model (.pth).
+        num_classes (int): Number of output classes (default 37).
+        batch_size (int): Batch size for training and validation.
+        epochs (int): Total number of training epochs.
+        lr (float): Learning rate for the optimizer.
+        weight_decay (float): Weight decay for regularization.
+        model (str): Model architecture to use: 'resnet18' or 'resnet50'.
+
+    Returns:
+        torch.nn.Module: The trained model (or loaded model if checkpoint already exists).
+
+    Notes:
+        - If the checkpoint already exists, training will be skipped and the model will be loaded.
+        - Freezes early layers (conv1, bn1, layer1, layer2) to allow fast fine-tuning on small datasets.
+        - Logs training and validation loss and accuracy every epoch.
+        - Input images are augmented via random crop and horizontal flip (training only).
+
+    Example:
+        >>> train_classifier(
+                data_root='data/images',
+                train_list='data/annotations/train.txt',
+                val_list='data/annotations/test.txt',
+                save_path='outputs/checkpoints/resnet50_cls_epoch_10.pth',
+                model='resnet50'
+            )
+    """
+    device = (
+        torch.device("cuda") if torch.cuda.is_available()
+        else torch.device("mps") if torch.backends.mps.is_available()
+        else torch.device("cpu")
+    )
     print(f"Using device: {device}")
 
 
-    
-    # === Image Transform with Data Augmentation ===
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
@@ -58,7 +115,6 @@ def train_classifier(data_root, train_list, val_list, save_path,
                              [0.229, 0.224, 0.225])
     ])
 
-
     val_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -66,7 +122,6 @@ def train_classifier(data_root, train_list, val_list, save_path,
                              [0.229, 0.224, 0.225])
     ])
 
-    # === Load Dataset ===
     train_dataset = PetClassificationDataset(data_root, train_list, train_transform)
     val_dataset = PetClassificationDataset(data_root, val_list, val_transform)
 
@@ -92,14 +147,12 @@ def train_classifier(data_root, train_list, val_list, save_path,
         print("Using ResNet50")
         model = get_resnet50(num_classes=num_classes).to(device)
 
-        # === Check if model already exists ===
     if os.path.exists(save_path):
-        print(f"✅ Model already exists at {save_path}. Loading and skipping training.")
+        print(f"Model already exists at {save_path}. Loading and skipping training.")
         model.load_state_dict(torch.load(save_path, map_location=device, weights_only=True))
         return model
 
-    # === Selective Layer Freezing ===
-    print("🔓 Unfreezing layer3, layer4 and fc (freezing earlier layers):")
+    print("Unfreezing layer3, layer4 and fc (freezing earlier layers):")
     for name, param in model.named_parameters():
         if name.startswith("layer4") or name.startswith("layer3") or name.startswith("fc"):
             param.requires_grad = True
@@ -107,7 +160,6 @@ def train_classifier(data_root, train_list, val_list, save_path,
             param.requires_grad = False
             print(f" - Frozen: {name}")
 
-    # === Loss and Optimizer ===
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                            lr=lr, weight_decay=weight_decay)

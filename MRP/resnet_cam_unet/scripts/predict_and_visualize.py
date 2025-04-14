@@ -25,25 +25,47 @@ def predict_and_save_masks(
     epochs = 15
 ):
     """
-    Generate and save predicted segmentation masks.
+    Perform segmentation inference using a trained model and save predicted masks.
+
+    This function loads a trained segmentation model (UNet or DeepLabV3),
+    performs forward inference on a set of test images, and saves the predicted
+    binary masks to the specified output directory.
 
     Args:
-        model_name (str): 'unet' or 'deeplabv3'
-        model_path (str): Path to the trained model weights.
-        test_list_file (str): Path to list of test image filenames.
-        image_dir (str): Path to raw image directory.
-        output_dir (str): Where to save predicted masks.
-        threshold (float): Sigmoid threshold for binarizing prediction.
+        model_name (str): Type of segmentation model to use. Options: 'unet' or 'deeplabv3'.
+        model_path (str): Path to the trained model weights (.pth file). If None, it will be auto-constructed
+                          using `res`, `cam`, and `epochs`.
+        test_list_file (str): Path to list file containing test image names (e.g., list.txt or test.txt).
+        image_dir (str): Directory containing the input images.
+        output_dir (str): Directory to save the predicted mask PNG files.
+        threshold (float): Sigmoid threshold (in [0, 1]) used to binarize output logits into masks.
+        res (int): Backbone identifier (for checkpoint filename construction, e.g., 18 or 50).
+        cam (float): CAM threshold used during pseudo-label generation (for filename).
+        epochs (int): Number of training epochs (used to locate model checkpoint).
+
+    Returns:
+        None. Saves binary mask images (0 or 255) with filenames matching original images.
+
+    Notes:
+        - The model is assumed to output logits in [0, 1] due to sigmoid activation.
+        - Output masks are resized back to original image resolution using nearest interpolation.
+        - Saved filenames will be in format: `xxx_pred.png`.
+
+    Example:
+        >>> predict_and_save_masks(
+                model_name='unet',
+                model_path='checkpoints/unet_seg_resnet50_cam_0.5_epoch_15.pth',
+                test_list_file='data/annotations/test.txt',
+                threshold=0.5
+            )
     """
-    # === Auto device
     device = (
         torch.device("cuda") if torch.cuda.is_available()
         else torch.device("mps") if torch.backends.mps.is_available()
         else torch.device("cpu")
     )
-    print(f"✅ Using device: {device}")
+    print(f"Using device: {device}")
 
-    # === Load model
     model = get_segmentor(model_name=model_name, num_classes=1).to(device)
 
     if model_path is None:
@@ -53,7 +75,6 @@ def predict_and_save_masks(
     model.load_state_dict(state_dict)
     model.eval()
 
-    # === Dataset & Transform
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -61,12 +82,10 @@ def predict_and_save_masks(
                              [0.229, 0.224, 0.225])
     ])
     dataset = PetDataset(image_dir, test_list_file, transform=transform)
-    print(f"✅ Loaded {len(dataset)} images from {image_dir}")
+    print(f"Loaded {len(dataset)} images from {image_dir}")
 
-    # === Output dir
     os.makedirs(output_dir, exist_ok=True)
 
-    # === Inference
     with torch.no_grad():
         for idx in range(len(dataset)):
             image = dataset[idx]
@@ -88,7 +107,7 @@ def predict_and_save_masks(
             save_path = os.path.join(output_dir, original_filename.replace('.jpg', '_pred.png'))
             resized_mask.save(save_path)
 
-    print(f"✅ Saved predicted masks to: {output_dir}")
+    print(f"Saved predicted masks to: {output_dir}")
 
 if __name__ == '__main__':
     from scripts.config import TEST_LIST_FILE

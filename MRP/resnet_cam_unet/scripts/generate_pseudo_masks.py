@@ -2,10 +2,8 @@ import os
 import sys
 import torch
 from PIL import Image
-import numpy as np
 from torchvision import transforms
 
-# Add project root for config import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scripts.config import IMAGE_DIR, CHECKPOINT_DIR, MASK_DIR, TRAIN_LIST_FILE
@@ -23,19 +21,37 @@ def generate_pseudo_masks(
     checkpoint_name=None
 ):
     """
-    Generate pseudo masks from a trained classifier using CAM.
+    Generate pseudo segmentation masks using Class Activation Maps (CAM).
+
+    This function takes a trained classification model and generates pixel-wise pseudo segmentation
+    masks by thresholding CAMs for each image. The resulting masks are saved to disk as grayscale PNGs.
 
     Args:
-        threshold (float or function): Threshold value or a function(cam_array) → float.
-        save_dir (str): Directory to save generated masks.
-        list_file (str): Path to classification list file.
-        model_name (str): 'resnet18' or 'resnet50'
-        checkpoint_name (str): Optional custom checkpoint filename
+        threshold (float or callable): Threshold value in [0, 1] or a function(cam_array) → float.
+            - If a float is passed, all CAMs will be binarized using that fixed threshold.
+            - If a function is passed (e.g., otsu_threshold), it will be applied per image.
+        save_dir (str): Path to directory where output masks will be saved.
+        list_file (str): Path to .txt file listing training images and labels (Oxford-IIIT Pet format).
+        model_name (str): Classification model to use; either 'resnet18' or 'resnet50'.
+        checkpoint_name (str, optional): Name of the checkpoint file to load. If None, uses default.
+
+    Raises:
+        ValueError: If an unsupported model_name is provided.
+        FileNotFoundError: If the model checkpoint does not exist.
+
+    Notes:
+        - The output masks will have values {0, 255}, where 255 represents foreground.
+        - Input images are resized to 224x224 before CAM computation.
+        - All results are saved with filenames like 'Abyssinian_100_mask.png'.
+
+    Example:
+        generate_pseudo_masks(threshold=0.5, model_name='resnet18')
+        generate_pseudo_masks(threshold=otsu_threshold, model_name='resnet50')
     """
-    print(f"🚀 Generating pseudo masks using {model_name} | threshold = {threshold if isinstance(threshold, float) else threshold.__name__}")
+
+    print(f"Generating pseudo masks using {model_name} | threshold = {threshold if isinstance(threshold, float) else threshold.__name__}")
     os.makedirs(save_dir, exist_ok=True)
 
-    # === Load transform
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -43,10 +59,8 @@ def generate_pseudo_masks(
                              [0.229, 0.224, 0.225])
     ])
 
-    # === Load dataset
     dataset = PetClassificationDataset(IMAGE_DIR, list_file, transform=transform)
 
-    # === Load classifier
     if model_name == 'resnet18':
         model = get_resnet18(num_classes=37)
         ckpt_name = checkpoint_name or 'resnet18_cls_epoch_10.pth'
@@ -61,7 +75,6 @@ def generate_pseudo_masks(
     model.load_state_dict(state_dict)
     model.eval()
 
-    # === Generate and save masks
     for image_tensor, label, image_name in dataset:
         cam = generate_cam(model, image_tensor, target_class=label)
         th = threshold(cam) if callable(threshold) else threshold
@@ -71,13 +84,12 @@ def generate_pseudo_masks(
         mask_img = Image.fromarray(mask, mode='L')
         mask_img.save(os.path.join(save_dir, f'{filename}_mask.png'))
 
-    print(f"✅ Pseudo masks saved to {save_dir}")
+    print(f"Pseudo masks saved to {save_dir}")
 
 
-# === Optional: Direct run
 if __name__ == '__main__':
     generate_pseudo_masks(
         threshold=0.5,
         model_name='resnet50',
-        checkpoint_name='resnet50_cls_epoch_10.pth'  # optional override
+        checkpoint_name='resnet50_cls_epoch_10.pth'  
     )
